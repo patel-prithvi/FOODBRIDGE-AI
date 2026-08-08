@@ -1,202 +1,121 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { RoleSelector } from './components/RoleSelector';
-import { DonorRegisterForm } from './components/DonorRegisterForm';
-import { ReceiverRegisterForm } from './components/ReceiverRegisterForm';
-import { LoginForm } from './components/LoginForm';
-import { DonorDashboardPlaceholder } from './components/DonorDashboardPlaceholder';
-import { ReceiverDashboardPlaceholder } from './components/ReceiverDashboardPlaceholder';
-import {
-  registerUser,
-  loginUser,
-  fetchCurrentUser,
-  logoutUser,
-  checkHealth
-} from './services/api';
-import './App.css';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import Loader from './components/common/Loader';
+
+// Public pages
+const Home = lazy(() => import('./pages/public/Home'));
+const HowItWorks = lazy(() => import('./pages/public/HowItWorks'));
+const PublicImpact = lazy(() => import('./pages/public/PublicImpact'));
+
+// Auth pages
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+
+// Donor pages
+const DonorDashboard = lazy(() => import('./pages/donor/DonorDashboard'));
+const CreateDonation = lazy(() => import('./pages/donor/CreateDonation'));
+const MyDonations = lazy(() => import('./pages/donor/MyDonations'));
+const DonationDetails = lazy(() => import('./pages/donor/DonationDetails'));
+const AIMatching = lazy(() => import('./pages/donor/AIMatching'));
+const DonorImpact = lazy(() => import('./pages/donor/DonorImpact'));
+const DonorProfile = lazy(() => import('./pages/donor/DonorProfile'));
+
+// Receiver pages
+const ReceiverDashboard = lazy(() => import('./pages/receiver/ReceiverDashboard'));
+const FindFood = lazy(() => import('./pages/receiver/FindFood'));
+const ReceiverDonationDetails = lazy(() => import('./pages/receiver/ReceiverDonationDetails'));
+const Pickup = lazy(() => import('./pages/receiver/Pickup'));
+const ReceiverImpact = lazy(() => import('./pages/receiver/ReceiverImpact'));
+const ReceiverProfile = lazy(() => import('./pages/receiver/ReceiverProfile'));
+
+// 404
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+const PageLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <Loader text="Loading..." />
+  </div>
+);
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authView, setAuthView] = useState('register'); // 'register' | 'login'
-  const [selectedRole, setSelectedRole] = useState('DONOR'); // 'DONOR' | 'RECEIVER'
-  const [loading, setLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [systemHealth, setSystemHealth] = useState(null);
-
-  // Auto-restore session on mount if token exists
-  useEffect(() => {
-    const token = localStorage.getItem('foodbridge_token');
-    const cachedUser = localStorage.getItem('foodbridge_user');
-
-    if (cachedUser) {
-      try {
-        setCurrentUser(JSON.parse(cachedUser));
-      } catch (e) {
-        // Invalid cached user format
-      }
-    }
-
-    if (token) {
-      fetchCurrentUser().then((res) => {
-        if (res.success && res.user) {
-          setCurrentUser(res.user);
-        } else {
-          setCurrentUser(null);
-        }
-      });
-    }
-
-    // Also check backend health
-    checkHealth().then((res) => {
-      if (res.success) {
-        setSystemHealth(res.data);
-      }
-    });
-  }, []);
-
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-    setAuthError('');
-  };
-
-  const handleRegister = async (formData) => {
-    setLoading(true);
-    setAuthError('');
-
-    const result = await registerUser(formData);
-    setLoading(false);
-
-    if (result.success && result.data?.user) {
-      setCurrentUser(result.data.user);
-    } else {
-      setAuthError(result.error || 'Registration failed');
-    }
-  };
-
-  const handleLogin = async (credentials) => {
-    setLoading(true);
-    setAuthError('');
-
-    const result = await loginUser(credentials);
-    setLoading(false);
-
-    if (result.success && result.data?.user) {
-      setCurrentUser(result.data.user);
-    } else {
-      setAuthError(result.error || 'Invalid credentials');
-    }
-  };
-
-  const handleLogout = async () => {
-    await logoutUser();
-    setCurrentUser(null);
-    setAuthView('login');
-  };
-
-  const handleNavigate = (view) => {
-    setAuthView(view);
-    setAuthError('');
-  };
-
   return (
-    <div className="app-main-layout">
-      {/* Navigation Header */}
-      <Navbar
-        user={currentUser}
-        onLogout={handleLogout}
-        onNavigate={handleNavigate}
-        currentView={authView}
-      />
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="fb-app">
+          <Navbar />
+          <main className="fb-main">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* ── Public ── */}
+                <Route path="/" element={<Home />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/impact" element={<PublicImpact />} />
 
-      {/* Main Content Area */}
-      <main className="content-container">
-        {currentUser ? (
-          /* PROTECTED ROLE-BASED DASHBOARD ROUTE PLACEHOLDERS */
-          currentUser.role === 'DONOR' ? (
-            <DonorDashboardPlaceholder user={currentUser} onLogout={handleLogout} />
-          ) : currentUser.role === 'RECEIVER' ? (
-            <ReceiverDashboardPlaceholder user={currentUser} onLogout={handleLogout} />
-          ) : (
-            <div className="alert-box error">Unauthorized user role</div>
-          )
-        ) : (
-          /* AUTHENTICATION VIEW */
-          <div className="auth-wrapper">
-            <div className="auth-hero">
-              <span className="hero-badge">🍊 Food Surplus Redistribution Platform</span>
-              <h1>Connect Food With Those Who Need It</h1>
-              <p className="hero-description">
-                FoodBridge AI brings together restaurants, caterers, and food banks to eliminate waste and deliver fresh meals efficiently.
-              </p>
-            </div>
+                {/* ── Auth ── */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
 
-            <div className="auth-card-container">
-              {authView === 'login' ? (
-                <LoginForm
-                  onSubmit={handleLogin}
-                  loading={loading}
-                  error={authError}
-                  onSwitchToRegister={() => setAuthView('register')}
-                />
-              ) : (
-                <div className="registration-flow">
-                  {/* PHASE 3: Role Selection */}
-                  <RoleSelector
-                    selectedRole={selectedRole}
-                    onSelectRole={handleRoleSelect}
-                  />
+                {/* ── Donor ── */}
+                <Route path="/donor/dashboard" element={
+                  <ProtectedRoute role="DONOR"><DonorDashboard /></ProtectedRoute>
+                } />
+                <Route path="/donor/donations/create" element={
+                  <ProtectedRoute role="DONOR"><CreateDonation /></ProtectedRoute>
+                } />
+                <Route path="/donor/donations" element={
+                  <ProtectedRoute role="DONOR"><MyDonations /></ProtectedRoute>
+                } />
+                <Route path="/donor/donations/:id" element={
+                  <ProtectedRoute role="DONOR"><DonationDetails /></ProtectedRoute>
+                } />
+                <Route path="/donor/ai-matching/:id" element={
+                  <ProtectedRoute role="DONOR"><AIMatching /></ProtectedRoute>
+                } />
+                <Route path="/donor/impact" element={
+                  <ProtectedRoute role="DONOR"><DonorImpact /></ProtectedRoute>
+                } />
+                <Route path="/donor/profile" element={
+                  <ProtectedRoute role="DONOR"><DonorProfile /></ProtectedRoute>
+                } />
 
-                  {/* Role Specific Registration Form */}
-                  {selectedRole === 'DONOR' ? (
-                    <DonorRegisterForm
-                      onSubmit={handleRegister}
-                      loading={loading}
-                      error={authError}
-                      onChangeRole={() => setAuthView('register')}
-                    />
-                  ) : (
-                    <ReceiverRegisterForm
-                      onSubmit={handleRegister}
-                      loading={loading}
-                      error={authError}
-                      onChangeRole={() => setAuthView('register')}
-                    />
-                  )}
+                {/* ── Receiver ── */}
+                <Route path="/receiver/dashboard" element={
+                  <ProtectedRoute role="RECEIVER"><ReceiverDashboard /></ProtectedRoute>
+                } />
+                <Route path="/receiver/food" element={
+                  <ProtectedRoute role="RECEIVER"><FindFood /></ProtectedRoute>
+                } />
+                <Route path="/receiver/food/:id" element={
+                  <ProtectedRoute role="RECEIVER"><ReceiverDonationDetails /></ProtectedRoute>
+                } />
+                <Route path="/receiver/recommended" element={
+                  <ProtectedRoute role="RECEIVER"><FindFood /></ProtectedRoute>
+                } />
+                <Route path="/receiver/pickup/:id" element={
+                  <ProtectedRoute role="RECEIVER"><Pickup /></ProtectedRoute>
+                } />
+                <Route path="/receiver/impact" element={
+                  <ProtectedRoute role="RECEIVER"><ReceiverImpact /></ProtectedRoute>
+                } />
+                <Route path="/receiver/profile" element={
+                  <ProtectedRoute role="RECEIVER"><ReceiverProfile /></ProtectedRoute>
+                } />
 
-                  <div className="form-footer-switch text-center">
-                    <span>Already registered? </span>
-                    <button
-                      type="button"
-                      className="btn-link"
-                      onClick={() => setAuthView('login')}
-                    >
-                      Sign In to Account
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* System Status Footer */}
-      <footer className="footer-system-bar">
-        <div className="footer-content">
-          <span>FoodBridge AI • MERN Authentication System (Phase 1)</span>
-          <span className="system-pill">
-            Backend & DB Status:{' '}
-            <strong
-              className={
-                systemHealth?.database?.isConnected ? 'text-success' : 'text-error'
-              }
-            >
-              {systemHealth?.database?.isConnected ? 'Connected ✓' : 'Connecting...'}
-            </strong>
-          </span>
+                {/* ── Fallbacks ── */}
+                <Route path="/donor" element={<Navigate to="/donor/dashboard" replace />} />
+                <Route path="/receiver" element={<Navigate to="/receiver/dashboard" replace />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
         </div>
-      </footer>
-    </div>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

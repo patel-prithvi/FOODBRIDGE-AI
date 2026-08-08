@@ -1,111 +1,109 @@
+/* ══════════════════════════════════════════════════════════════
+   FoodBridge AI — Global Reset & Design Tokens
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Brand colors */
+  --orange:        #f97316;
+  --orange-hover:  #ea580c;
+  --orange-light:  rgba(249, 115, 22, 0.1);
+  --orange-border: rgba(249, 115, 22, 0.35);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Semantic */
+  --green:   #10b981;
+  --green-light: rgba(16, 185, 129, 0.12);
+  --red:     #ef4444;
+  --red-light: rgba(239, 68, 68, 0.1);
+  --amber:   #f59e0b;
+  --amber-light: rgba(245, 158, 11, 0.12);
+  --blue:    #3b82f6;
+  --blue-light: rgba(59, 130, 246, 0.12);
+  --purple:  #8b5cf6;
+  --purple-light: rgba(139, 92, 246, 0.12);
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Neutrals */
+  --dark:       #0f172a;
+  --dark-2:     #1e293b;
+  --dark-border: rgba(255,255,255,0.1);
+  --text:       #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --bg:         #f8fafc;
+  --cream:      #fffbf5;
+  --white:      #ffffff;
+  --border:     #e2e8f0;
+  --card-bg:    #ffffff;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:  0 10px 32px rgba(0,0,0,0.1);
+
+  /* Radius */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+
+  /* Spacing */
+  --gap:   1.5rem;
+  --gap-sm: 1rem;
+  --gap-lg: 2.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+html { scroll-behavior: smooth; }
 
 body {
-  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  text-align: left;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h1, h2, h3, h4, h5 {
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.3px;
 }
+h1 { font-size: 2.25rem; font-weight: 800; }
+h2 { font-size: 1.75rem; font-weight: 700; }
+h3 { font-size: 1.25rem; font-weight: 600; }
+h4 { font-size: 1rem; font-weight: 600; }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
+p { margin: 0; }
+a { color: var(--orange); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+select, textarea, input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
 }
+textarea { resize: vertical; }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* ── App shell ── */
+.fb-app { display: flex; flex-direction: column; min-height: 100vh; }
+.fb-main {
+  flex: 1;
+  max-width: 1200px;
+  width: 92%;
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
 }
+.fb-muted { color: var(--text-muted); font-size: 0.9rem; }
