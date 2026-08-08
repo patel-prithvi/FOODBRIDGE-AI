@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import requestRoutes from './routes/request.routes.js';
+import donationRoutes from './routes/donation.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 dotenv.config();
 
@@ -33,6 +36,9 @@ app.use(express.json());
 // API Routes
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/donations', donationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Root route fallback
 app.get('/', (req, res) => {

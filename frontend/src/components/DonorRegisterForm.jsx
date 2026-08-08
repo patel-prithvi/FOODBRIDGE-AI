@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LocationInput } from './LocationInput';
 
 export const DonorRegisterForm = ({ onSubmit, loading, error, onChangeRole }) => {
   const [formData, setFormData] = useState({
@@ -7,10 +8,12 @@ export const DonorRegisterForm = ({ onSubmit, loading, error, onChangeRole }) =>
     password: '',
     organizationName: '',
     phone: '',
-    address: '',
-    city: '',
-    lat: '',
-    lng: ''
+    location: {
+      address: '',
+      city: '',
+      lat: 0,
+      lng: 0,
+    },
   });
 
   const [validationError, setValidationError] = useState('');
@@ -20,18 +23,28 @@ export const DonorRegisterForm = ({ onSubmit, loading, error, onChangeRole }) =>
     setValidationError('');
   };
 
+  const handleLocationChange = (newLocation) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: newLocation,
+    }));
+    setValidationError('');
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!formData.name.trim()) return setValidationError('Full name is required');
-    if (!formData.email.trim()) return setValidationError('Email is required');
+    if (!formData.email.trim()) return setValidationError('Email address is required');
     if (!formData.password || formData.password.length < 6)
       return setValidationError('Password must be at least 6 characters');
     if (!formData.organizationName.trim())
       return setValidationError('Organization / Business name is required');
     if (!formData.phone.trim()) return setValidationError('Phone number is required');
-    if (!formData.address.trim()) return setValidationError('Street address is required');
-    if (!formData.city.trim()) return setValidationError('City is required');
+
+    // Location validations
+    if (!formData.location.city?.trim()) return setValidationError('City is required in location');
+    if (!formData.location.address?.trim()) return setValidationError('Street address is required in location');
 
     onSubmit({
       role: 'DONOR',
@@ -41,11 +54,11 @@ export const DonorRegisterForm = ({ onSubmit, loading, error, onChangeRole }) =>
       organizationName: formData.organizationName,
       phone: formData.phone,
       location: {
-        address: formData.address,
-        city: formData.city,
-        lat: Number(formData.lat) || 0,
-        lng: Number(formData.lng) || 0
-      }
+        address: formData.location.address,
+        city: formData.location.city,
+        lat: Number(formData.location.lat) || 0,
+        lng: Number(formData.location.lng) || 0,
+      },
     });
   };
 
@@ -111,7 +124,7 @@ export const DonorRegisterForm = ({ onSubmit, loading, error, onChangeRole }) =>
           />
         </div>
 
-        <div className="form-group">
+        <div className="form-group full-width">
           <label>Phone Number *</label>
           <input
             type="tel"
@@ -122,56 +135,13 @@ export const DonorRegisterForm = ({ onSubmit, loading, error, onChangeRole }) =>
             required
           />
         </div>
-
-        <div className="form-group">
-          <label>City *</label>
-          <input
-            type="text"
-            name="city"
-            placeholder="e.g. Ahmedabad"
-            value={formData.city}
-            onChange={handleChange}
-            required
-          />
-        </div>
       </div>
 
-      <div className="form-group full-width">
-        <label>Street Address *</label>
-        <input
-          type="text"
-          name="address"
-          placeholder="e.g. 102 MG Road, Satellite Area"
-          value={formData.address}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="form-grid coords-grid">
-        <div className="form-group">
-          <label>Latitude (Optional)</label>
-          <input
-            type="number"
-            step="any"
-            name="lat"
-            placeholder="23.0225"
-            value={formData.lat}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label>Longitude (Optional)</label>
-          <input
-            type="number"
-            step="any"
-            name="lng"
-            placeholder="72.5714"
-            value={formData.lng}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
+      {/* REAL LOCATION SELECTION COMPONENT */}
+      <LocationInput
+        locationData={formData.location}
+        onChangeLocation={handleLocationChange}
+      />
 
       <button type="submit" className="btn-primary" disabled={loading}>
         {loading ? 'Creating Donor Account...' : 'REGISTER AS DONOR'}

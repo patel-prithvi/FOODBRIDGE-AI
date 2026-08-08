@@ -31,13 +31,6 @@ export const ReceiverDashboardPlaceholder = ({ user, onLogout }) => {
             <span className="value">{user.phone}</span>
           </div>
 
-          <div className="info-box">
-            <span className="label">Verification Status</span>
-            <span className="status-pill pending">
-              {user.verificationStatus || 'PENDING'}
-            </span>
-          </div>
-
           <div className="info-box full">
             <span className="label">Registered Location</span>
             <span className="value">

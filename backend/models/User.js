@@ -70,6 +70,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['PENDING', 'VERIFIED', 'REJECTED'],
       default: 'PENDING'
+    },
+    capacity: {
+      type: Number,
+      default: 150
+    },
+    dietaryNeeds: {
+      type: [String],
+      default: ['Vegetarian', 'Vegan']
     }
   },
   {
