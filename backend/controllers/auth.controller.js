@@ -82,8 +82,27 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Phone number is required.' });
     }
 
-    if (!location || !location.address || !location.city) {
-      return res.status(400).json({ success: false, message: 'Location with address and city is required.' });
+    if (!location || typeof location !== 'object') {
+      return res.status(400).json({ success: false, message: 'Valid location object is required.' });
+    }
+
+    if (!location.address || !location.address.trim()) {
+      return res.status(400).json({ success: false, message: 'Street address is required in location.' });
+    }
+
+    if (!location.city || !location.city.trim()) {
+      return res.status(400).json({ success: false, message: 'City is required in location.' });
+    }
+
+    const latNum = Number(location.lat);
+    const lngNum = Number(location.lng);
+
+    if (isNaN(latNum) || latNum < -90 || latNum > 90) {
+      return res.status(400).json({ success: false, message: 'Latitude must be a valid number between -90 and 90.' });
+    }
+
+    if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
+      return res.status(400).json({ success: false, message: 'Longitude must be a valid number between -180 and 180.' });
     }
 
     // Check if duplicate user exists
@@ -101,8 +120,8 @@ export const registerUser = async (req, res) => {
     const userLocation = {
       address: location.address.trim(),
       city: location.city.trim(),
-      lat: Number(location.lat) || 0,
-      lng: Number(location.lng) || 0
+      lat: latNum,
+      lng: lngNum
     };
 
     // Create user in DB
