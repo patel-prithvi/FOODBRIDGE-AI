@@ -23,7 +23,7 @@ const Navbar = () => {
 
   const receiverLinks = [
     { to: '/receiver/dashboard', label: 'Dashboard' },
-    { to: '/receiver/food', label: 'Find Food' },
+    { to: '/receiver/request', label: 'Find Food' },
     { to: '/receiver/recommended', label: 'AI Picks' },
     { to: '/receiver/impact', label: 'Impact' },
   ];

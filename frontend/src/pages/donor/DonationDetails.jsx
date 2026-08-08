@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getDonationById } from '../../services/donationService';
+import { getDonationById, markPickedUp, completePickup } from '../../services/donationService';
 import StatusTimeline from '../../components/donation/StatusTimeline';
 import Badge from '../../components/common/Badge';
 import Loader from '../../components/common/Loader';
 import ErrorState from '../../components/common/ErrorState';
+import Toast from '../../components/common/Toast';
 import { formatDate, formatTime, priorityClass, statusLabel, getCountdown } from '../../utils/helpers';
 
 const DonationDetails = () => {
@@ -14,16 +15,32 @@ const DonationDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' });
 
-  const load = async () => {
-    setLoading(true);
+  // Fetch donation details from MongoDB
+  const fetchDonation = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     const res = await getDonationById(id);
-    setLoading(false);
-    if (res.success) setDonation(res.data);
-    else setError(res.error);
-  };
+    if (isInitial) setLoading(false);
 
-  useEffect(() => { load(); }, [id]);
+    if (res.success && res.data) {
+      setDonation(res.data);
+    } else if (isInitial) {
+      setError(res.error);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchDonation(true);
+
+    // Auto-poll MongoDB every 3 seconds so Donor timeline updates in real-time when Receiver accepts or picks up
+    const pollInterval = setInterval(() => {
+      fetchDonation(false);
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [fetchDonation]);
 
   useEffect(() => {
     if (!donation?.pickupEnd) return;
@@ -33,23 +50,55 @@ const DonationDetails = () => {
     return () => clearInterval(interval);
   }, [donation]);
 
+  const handleMarkPickedUp = async () => {
+    setActionLoading(true);
+    setDonation((prev) => ({ ...prev, status: 'PICKED_UP' }));
+    const res = await markPickedUp(id);
+    setActionLoading(false);
+    if (res.success) {
+      setToast({ message: '🚚 Marked as Picked Up!', type: 'success' });
+    } else {
+      setToast({ message: res.error, type: 'error' });
+    }
+  };
+
+  const handleComplete = async () => {
+    setActionLoading(true);
+    setDonation((prev) => ({ ...prev, status: 'COMPLETED' }));
+    const res = await completePickup(id);
+    setActionLoading(false);
+    if (res.success) {
+      setToast({ message: '🎉 Donation Completed!', type: 'success' });
+    } else {
+      setToast({ message: res.error, type: 'error' });
+    }
+  };
+
   if (loading) return <Loader text="Loading donation details..." />;
-  if (error) return <ErrorState description={error} onRetry={load} />;
+  if (error) return <ErrorState description={error} onRetry={() => fetchDonation(true)} />;
   if (!donation) return null;
+
+  const isAccepted = donation.status === 'ACCEPTED' || donation.status === 'MATCHED';
+  const isPickedUp = donation.status === 'PICKED_UP';
+  const isCompleted = donation.status === 'COMPLETED';
 
   return (
     <div className="fb-donation-details">
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
+
       <div className="fb-page-header">
         <div>
           <button className="fb-btn fb-btn--ghost fb-btn--sm" onClick={() => navigate(-1)}>
             ← Back
           </button>
           <h1>{donation.foodType}</h1>
-          <p className="fb-page-header__subtitle">Donation #{donation._id.slice(-6).toUpperCase()}</p>
+          <p className="fb-page-header__subtitle">Donation #{String(donation._id).slice(-6).toUpperCase()}</p>
         </div>
         <div className="fb-donation-details__badges">
           <Badge variant={priorityClass(donation.aiPriority)}>{donation.aiPriority}</Badge>
-          <Badge variant="info">{statusLabel(donation.status)}</Badge>
+          <Badge variant={isCompleted ? 'success' : isPickedUp ? 'warning' : 'info'}>
+            {statusLabel(donation.status)}
+          </Badge>
         </div>
       </div>
 
@@ -81,6 +130,12 @@ const DonationDetails = () => {
                 <span>Organization</span>
                 <strong>{donation.matchedReceiver.organizationName}</strong>
               </div>
+              {donation.matchedReceiver.contactPerson && (
+                <div className="fb-detail-row">
+                  <span>Contact</span>
+                  <strong>{donation.matchedReceiver.contactPerson}</strong>
+                </div>
+              )}
               {donation.aiScore && (
                 <div className="fb-detail-row">
                   <span>AI Match Score</span>
@@ -98,7 +153,7 @@ const DonationDetails = () => {
             </div>
           )}
 
-          {/* AI match action */}
+          {/* Action buttons based on status */}
           {donation.status === 'AVAILABLE' && (
             <button
               className="fb-btn fb-btn--primary fb-btn--full"
@@ -106,6 +161,63 @@ const DonationDetails = () => {
             >
               🎯 View AI Receiver Matches
             </button>
+          )}
+
+          {isAccepted && (
+            <div style={{ marginTop: '0.75rem' }}>
+              <div style={{
+                background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px',
+                padding: '1rem', textAlign: 'center', marginBottom: '0.75rem',
+              }}>
+                <p style={{ margin: 0, fontWeight: 700, color: '#16a34a', fontSize: '1rem' }}>
+                  🎉 Receiver Accepted Your Offer!
+                </p>
+                <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Receiver is scheduled to pick up the food.
+                </p>
+              </div>
+              <button
+                className="fb-btn fb-btn--primary fb-btn--full"
+                onClick={handleMarkPickedUp}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Updating...' : '📦 Mark as Picked Up'}
+              </button>
+            </div>
+          )}
+
+          {isPickedUp && (
+            <div style={{ marginTop: '0.75rem' }}>
+              <div style={{
+                background: '#fff7ed', border: '1.5px solid #fdba74', borderRadius: '12px',
+                padding: '1rem', textAlign: 'center', marginBottom: '0.75rem',
+              }}>
+                <p style={{ margin: 0, fontWeight: 700, color: '#c2410c', fontSize: '1rem' }}>
+                  🚚 Food Picked Up!
+                </p>
+                <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                  Confirm completion once food redistribution is complete.
+                </p>
+              </div>
+              <button
+                className="fb-btn fb-btn--primary fb-btn--full"
+                onClick={handleComplete}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Updating...' : '✅ Mark as Completed'}
+              </button>
+            </div>
+          )}
+
+          {isCompleted && (
+            <div style={{
+              background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '12px',
+              padding: '1rem', textAlign: 'center', marginTop: '0.75rem',
+            }}>
+              <p style={{ margin: 0, fontWeight: 700, color: '#16a34a', fontSize: '1.1rem' }}>
+                🎉 Donation Completed & Fulfilled!
+              </p>
+            </div>
           )}
         </div>
 

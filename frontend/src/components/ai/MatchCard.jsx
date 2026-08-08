@@ -13,7 +13,15 @@ const MatchFactor = ({ label, score }) => (
 );
 
 const MatchCard = ({ receiver, rank, onSelect, selected }) => {
-  const { organizationName, matchScore, matchFactors, matchExplanation, location, verificationStatus } = receiver;
+  const {
+    organizationName,
+    matchScore,
+    matchFactors,
+    matchExplanation,
+    location,
+    verificationStatus,
+    foodRequest,
+  } = receiver;
 
   return (
     <div className={`fb-match-card ${selected ? 'fb-match-card--selected' : ''} ${rank === 0 ? 'fb-match-card--top' : ''}`}>
@@ -31,6 +39,39 @@ const MatchCard = ({ receiver, rank, onSelect, selected }) => {
 
       {verificationStatus === 'VERIFIED' && (
         <Badge variant="success" className="fb-match-card__verified">✓ Verified</Badge>
+      )}
+
+      {/* Receiver's actual food request — what they need and how much */}
+      {foodRequest && (
+        <div style={{
+          background: '#f0fdf4',
+          border: '1px solid #86efac',
+          borderRadius: '8px',
+          padding: '0.6rem 1rem',
+          margin: '0.75rem 0',
+          fontSize: '0.85rem',
+        }}>
+          <span style={{ fontWeight: 700, color: '#15803d', marginRight: '0.4rem' }}>
+            📋 Their Need:
+          </span>
+          <span style={{ color: '#166534' }}>
+            {foodRequest.quantity} {foodRequest.unit} of {foodRequest.foodType}
+            {foodRequest.dietaryInformation && ` · ${foodRequest.dietaryInformation}`}
+          </span>
+          {foodRequest.exactFoodTypeMatch && (
+            <span style={{
+              marginLeft: '0.5rem',
+              background: '#dcfce7',
+              color: '#166534',
+              borderRadius: '4px',
+              padding: '0.1rem 0.5rem',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+            }}>
+              ✓ Exact Match
+            </span>
+          )}
+        </div>
       )}
 
       {matchFactors && (

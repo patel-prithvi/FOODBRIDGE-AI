@@ -26,6 +26,8 @@ const DonorProfile = lazy(() => import('./pages/donor/DonorProfile'));
 
 // Receiver pages
 const ReceiverDashboard = lazy(() => import('./pages/receiver/ReceiverDashboard'));
+const CreateRequest = lazy(() => import('./pages/receiver/CreateRequest'));
+const AvailabilityPage = lazy(() => import('./pages/receiver/AvailabilityPage'));
 const FindFood = lazy(() => import('./pages/receiver/FindFood'));
 const ReceiverDonationDetails = lazy(() => import('./pages/receiver/ReceiverDonationDetails'));
 const Pickup = lazy(() => import('./pages/receiver/Pickup'));
@@ -85,6 +87,12 @@ function App() {
                 {/* ── Receiver ── */}
                 <Route path="/receiver/dashboard" element={
                   <ProtectedRoute role="RECEIVER"><ReceiverDashboard /></ProtectedRoute>
+                } />
+                <Route path="/receiver/request" element={
+                  <ProtectedRoute role="RECEIVER"><CreateRequest /></ProtectedRoute>
+                } />
+                <Route path="/receiver/availability" element={
+                  <ProtectedRoute role="RECEIVER"><AvailabilityPage /></ProtectedRoute>
                 } />
                 <Route path="/receiver/food" element={
                   <ProtectedRoute role="RECEIVER"><FindFood /></ProtectedRoute>
