@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import healthRoutes from './routes/health.routes.js';
+import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 // Root route fallback
 app.get('/', (req, res) => {
